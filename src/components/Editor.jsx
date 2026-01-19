@@ -25,8 +25,8 @@ const defaultRoverCode = `void main() {
 
 export function CodeEditor() {
   const editorRef = useRef(null);
-  const robotStore = useRobotStore();
-  const { robotType } = robotStore;
+  const robotState = useRobotStore();
+  const { robotType } = robotState;
   const [code, setCode] = useState(robotType === 'arm' ? defaultArmCode : defaultRoverCode);
 
   // Update code when robot type changes
@@ -83,15 +83,15 @@ export function CodeEditor() {
     }
 
     // Reset robot to initial position
-    robotStore.reset();
+    useRobotStore.getState().reset();
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Execute commands sequentially
-    await executeCommands(validCommands, robotStore);
+    // Execute commands sequentially - pass the store object, not the state
+    await executeCommands(validCommands, useRobotStore);
   };
 
   const handleReset = () => {
-    robotStore.reset();
+    useRobotStore.getState().reset();
   };
 
   return (

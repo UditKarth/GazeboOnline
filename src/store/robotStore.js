@@ -49,7 +49,8 @@ export const useRobotStore = create((set, get) => ({
   animateJoint: (jointIndex, targetAngle, duration = 1000) => {
     return new Promise((resolve) => {
       set({ isAnimating: true });
-      const startAngle = useRobotStore.getState().jointAngles[jointIndex];
+      // Use get() from the store closure instead of useRobotStore.getState()
+      const startAngle = get().jointAngles[jointIndex];
       const startTime = Date.now();
 
       const animate = () => {

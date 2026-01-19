@@ -73,7 +73,9 @@ function Gripper({ isOpen }) {
 
 // Main Robot Arm Component
 export function RobotModel() {
-  const { jointAngles, gripperState } = useRobotStore();
+  const { jointAngles, gripperState, robotType } = useRobotStore();
+
+  if (robotType !== 'arm') return null;
 
   return (
     <>

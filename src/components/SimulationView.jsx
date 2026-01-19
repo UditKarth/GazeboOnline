@@ -19,8 +19,9 @@ export function SimulationView() {
       </div>
 
       {/* 3D Canvas */}
-      <div className={robotType === 'rover' ? 'flex-1 relative' : 'flex-1 relative'}>
+      <div className="flex-1 relative">
         <Canvas
+          key={robotType}
           camera={robotType === 'arm' 
             ? { position: [3, 3, 3], fov: 50 }
             : { position: [5, 5, 5], fov: 50 }

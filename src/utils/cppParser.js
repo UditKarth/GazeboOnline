@@ -110,7 +110,16 @@ export class RobotCommandParser {
  * Execute parsed commands with animation
  */
 export async function executeCommands(commands, robotStore) {
-  const currentRobotType = robotStore.getState().robotType;
+  // robotStore is the Zustand store object (useRobotStore)
+  // In Zustand v4, methods are directly on the store object
+  if (!robotStore || typeof robotStore.getState !== 'function') {
+    console.error('Invalid robotStore passed to executeCommands');
+    return;
+  }
+  
+  // Get the state object which also has all the methods
+  const storeState = robotStore.getState();
+  const currentRobotType = storeState.robotType;
   
   for (const command of commands) {
     // Skip commands that don't match current robot type
@@ -120,31 +129,38 @@ export async function executeCommands(commands, robotStore) {
 
     // ========== ARM ROBOT COMMANDS ==========
     if (command.type === 'moveJoint') {
-      await robotStore.animateJoint(command.jointIndex, command.angle, 1000);
+      // In Zustand v4, methods are on both the store object and the state object
+      const animateJointFn = robotStore.animateJoint || storeState.animateJoint;
+      if (animateJointFn && typeof animateJointFn === 'function') {
+        await animateJointFn(command.jointIndex, command.angle, 1000);
+      } else {
+        console.error('animateJoint not found. Available methods on store:', Object.keys(robotStore).filter(k => typeof robotStore[k] === 'function'));
+        console.error('Available methods on state:', Object.keys(storeState).filter(k => typeof storeState[k] === 'function'));
+      }
     } else if (command.type === 'closeGripper') {
-      robotStore.setGripperState(0);
-      // Small delay for visual feedback
+      const setGripperFn = robotStore.setGripperState || storeState.setGripperState;
+      if (setGripperFn) setGripperFn(0);
       await new Promise(resolve => setTimeout(resolve, 300));
     } else if (command.type === 'openGripper') {
-      robotStore.setGripperState(1);
+      const setGripperFn = robotStore.setGripperState || storeState.setGripperState;
+      if (setGripperFn) setGripperFn(1);
       await new Promise(resolve => setTimeout(resolve, 300));
     }
     // ========== ROVER ROBOT COMMANDS ==========
     else if (command.type === 'move') {
-      // Set velocity (vx in m/s, wz in rad/s)
-      robotStore.setVelocity(command.vx, command.wz);
-      // Small delay to allow physics to process
+      const setVelocityFn = robotStore.setVelocity || storeState.setVelocity;
+      if (setVelocityFn) setVelocityFn(command.vx, command.wz);
       await new Promise(resolve => setTimeout(resolve, 50));
     } else if (command.type === 'getDistance') {
-      // Get distance sensor reading
-      const distance = robotStore.getDistance();
-      // In a real implementation, this might be used in the code
-      // For now, we just read the value from the store
-      console.log(`Distance sensor reading: ${distance.toFixed(2)}m`);
+      const getDistanceFn = robotStore.getDistance || storeState.getDistance;
+      if (getDistanceFn) {
+        const distance = getDistanceFn();
+        console.log(`Distance sensor reading: ${distance.toFixed(2)}m`);
+      }
       await new Promise(resolve => setTimeout(resolve, 100));
     } else if (command.type === 'setLight') {
-      // Set LED color
-      robotStore.setLedColor(command.color);
+      const setLedColorFn = robotStore.setLedColor || storeState.setLedColor;
+      if (setLedColorFn) setLedColorFn(command.color);
       await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
