@@ -22,6 +22,21 @@ function App() {
           <SimulationView />
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 border-t border-gray-700 px-6 py-3">
+        <p className="text-sm text-gray-400 text-center">
+          Made with <span className="text-red-500">❤️</span> by{' '}
+          <a
+            href="https://github.com/UditKarth/GazeboOnline"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300 transition-colors underline"
+          >
+            Udit
+          </a>
+        </p>
+      </footer>
     </div>
   );
 }
