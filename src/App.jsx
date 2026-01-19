@@ -1,5 +1,6 @@
 import { CodeEditor } from './components/Editor';
 import { SimulationView } from './components/SimulationView';
+import { Documentation } from './components/Documentation';
 
 function App() {
   return (
@@ -12,9 +13,16 @@ function App() {
 
       {/* Main Content - Side by Side */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left: Code Editor */}
-        <div className="w-1/2 border-r border-gray-700">
-          <CodeEditor />
+        {/* Left: Code Editor and Documentation */}
+        <div className="w-1/2 border-r border-gray-700 flex flex-col">
+          {/* Code Editor - Takes 3/4 of left side */}
+          <div className="flex-[3] min-h-0">
+            <CodeEditor />
+          </div>
+          {/* Documentation - Takes 1/4 of left side */}
+          <div className="flex-1 min-h-0">
+            <Documentation />
+          </div>
         </div>
 
         {/* Right: 3D Simulation */}
