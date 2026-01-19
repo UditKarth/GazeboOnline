@@ -1,4 +1,8 @@
+import { useRobotStore } from '../store/robotStore';
+
 export function Documentation() {
+  const { robotType } = useRobotStore();
+
   return (
     <div className="flex flex-col h-full bg-gray-900 border-t border-gray-700">
       {/* Header */}
@@ -8,13 +12,22 @@ export function Documentation() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {/* Introduction */}
-        <div>
-          <h3 className="text-md font-semibold text-white mb-2">Overview</h3>
-          <p className="text-sm text-gray-300 leading-relaxed">
-            Control the 5-DOF robot arm using simple C++ function calls. All movements are animated smoothly, and commands execute sequentially.
-          </p>
-        </div>
+        {robotType === 'arm' ? <ArmDocumentation /> : <RoverDocumentation />}
+      </div>
+    </div>
+  );
+}
+
+function ArmDocumentation() {
+  return (
+    <>
+      {/* Introduction */}
+      <div>
+        <h3 className="text-md font-semibold text-white mb-2">Overview</h3>
+        <p className="text-sm text-gray-300 leading-relaxed">
+          Control the 5-DOF robot arm using simple C++ function calls. All movements are animated smoothly, and commands execute sequentially.
+        </p>
+      </div>
 
         {/* moveJoint */}
         <div>
@@ -91,17 +104,129 @@ export function Documentation() {
           </div>
         </div>
 
-        {/* Notes */}
-        <div className="border-t border-gray-700 pt-4">
-          <h3 className="text-md font-semibold text-white mb-2">Notes</h3>
+      {/* Notes */}
+      <div className="border-t border-gray-700 pt-4">
+        <h3 className="text-md font-semibold text-white mb-2">Notes</h3>
+        <ul className="text-xs text-gray-300 space-y-1 ml-4 list-disc">
+          <li>Commands execute sequentially, one after another</li>
+          <li>Joint movements are animated smoothly over 1 second</li>
+          <li>Use the <code className="text-blue-400">Reset</code> button to return the robot to its initial position</li>
+          <li>Joint angles are in degrees and can be positive or negative</li>
+        </ul>
+      </div>
+    </>
+  );
+}
+
+function RoverDocumentation() {
+  return (
+    <>
+      {/* Introduction */}
+      <div>
+        <h3 className="text-md font-semibold text-white mb-2">Overview</h3>
+        <p className="text-sm text-gray-300 leading-relaxed">
+          Control the 4-wheeled rover using ROS2-style commands. The rover uses velocity-based control similar to ROS2's <code className="text-blue-400">geometry_msgs/Twist</code> message. Commands execute in real-time with physics-based movement.
+        </p>
+      </div>
+
+      {/* move */}
+      <div>
+        <h3 className="text-md font-semibold text-white mb-2">
+          <code className="text-blue-400">robot.move(vx, wz)</code>
+        </h3>
+        <p className="text-sm text-gray-300 mb-2 leading-relaxed">
+          Sets the linear and angular velocity of the rover. Equivalent to ROS2's <code className="text-blue-400">cmd_vel</code> topic. The robot will continue moving at this velocity until a new command is sent or the watchdog timeout (500ms) expires.
+        </p>
+        <div className="bg-gray-800 rounded p-3 mb-2">
+          <p className="text-xs text-gray-400 mb-1">Parameters:</p>
           <ul className="text-xs text-gray-300 space-y-1 ml-4 list-disc">
-            <li>Commands execute sequentially, one after another</li>
-            <li>Joint movements are animated smoothly over 1 second</li>
-            <li>Use the <code className="text-blue-400">Reset</code> button to return the robot to its initial position</li>
-            <li>Joint angles are in degrees and can be positive or negative</li>
+            <li><code className="text-blue-400">vx</code> (float): Linear velocity in m/s (forward/backward)</li>
+            <li><code className="text-blue-400">wz</code> (float): Angular velocity in rad/s (rotation)</li>
           </ul>
         </div>
+        <div className="bg-gray-800 rounded p-3 mb-2">
+          <p className="text-xs text-gray-400 mb-1">ROS2 Mapping:</p>
+          <ul className="text-xs text-gray-300 space-y-1 ml-4 list-disc">
+            <li>Maps to <code className="text-blue-400">geometry_msgs/Twist.linear.x</code> and <code className="text-blue-400">geometry_msgs/Twist.angular.z</code></li>
+            <li>Positive vx: forward, Negative vx: backward</li>
+            <li>Positive wz: counter-clockwise, Negative wz: clockwise</li>
+          </ul>
+        </div>
+        <div className="mt-2 bg-gray-800 rounded p-3">
+          <p className="text-xs text-gray-400 mb-1">Example:</p>
+          <pre className="text-xs text-gray-300 overflow-x-auto">
+            <code>{`robot.move(1.0, 0.0);   // Move forward at 1 m/s\nrobot.move(0.0, 0.5);  // Rotate in place at 0.5 rad/s\nrobot.move(0.0, 0.0);  // Stop`}</code>
+          </pre>
+        </div>
       </div>
-    </div>
+
+      {/* getDistance */}
+      <div>
+        <h3 className="text-md font-semibold text-white mb-2">
+          <code className="text-blue-400">robot.getDistance()</code>
+        </h3>
+        <p className="text-sm text-gray-300 mb-2 leading-relaxed">
+          Returns the distance reading from the frontal distance sensor in meters. The sensor has a maximum range of 5 meters. Returns the distance to the nearest obstacle in front of the robot.
+        </p>
+        <div className="bg-gray-800 rounded p-3 mb-2">
+          <p className="text-xs text-gray-400 mb-1">Return Value:</p>
+          <ul className="text-xs text-gray-300 space-y-1 ml-4 list-disc">
+            <li><code className="text-blue-400">float</code>: Distance in meters (0.0 to 5.0)</li>
+            <li>Returns 5.0 if no obstacle detected within range</li>
+          </ul>
+        </div>
+        <div className="bg-gray-800 rounded p-3">
+          <p className="text-xs text-gray-400 mb-1">Example:</p>
+          <pre className="text-xs text-gray-300 overflow-x-auto">
+            <code>{`float dist = robot.getDistance();\nif (dist < 1.0) {\n    robot.move(0.0, 0.0);  // Stop if obstacle too close\n}`}</code>
+          </pre>
+        </div>
+      </div>
+
+      {/* setLight */}
+      <div>
+        <h3 className="text-md font-semibold text-white mb-2">
+          <code className="text-blue-400">robot.setLight(color)</code>
+        </h3>
+        <p className="text-sm text-gray-300 mb-2 leading-relaxed">
+          Changes the color of the LED light on the rover. Accepts color names, hex strings, or numeric color codes.
+        </p>
+        <div className="bg-gray-800 rounded p-3 mb-2">
+          <p className="text-xs text-gray-400 mb-1">Parameters:</p>
+          <ul className="text-xs text-gray-300 space-y-1 ml-4 list-disc">
+            <li><code className="text-blue-400">color</code> (string): Color name ("red", "blue", "green") or hex string ("#ff0000")</li>
+          </ul>
+        </div>
+        <div className="bg-gray-800 rounded p-3">
+          <p className="text-xs text-gray-400 mb-1">Example:</p>
+          <pre className="text-xs text-gray-300 overflow-x-auto">
+            <code>{`robot.setLight("red");\nrobot.setLight("#00ff00");  // Green\nrobot.setLight("blue");`}</code>
+          </pre>
+        </div>
+      </div>
+
+      {/* Complete Example */}
+      <div>
+        <h3 className="text-md font-semibold text-white mb-2">Complete Example</h3>
+        <div className="bg-gray-800 rounded p-3">
+          <pre className="text-xs text-gray-300 overflow-x-auto">
+            <code>{`void main() {\n    robot.setLight("green");\n    robot.move(1.0, 0.0);  // Move forward\n    // ... wait ...\n    float dist = robot.getDistance();\n    if (dist < 2.0) {\n        robot.move(0.0, 0.5);  // Turn if obstacle detected\n    }\n    robot.move(0.0, 0.0);  // Stop\n}`}</code>
+          </pre>
+        </div>
+      </div>
+
+      {/* Notes */}
+      <div className="border-t border-gray-700 pt-4">
+        <h3 className="text-md font-semibold text-white mb-2">Notes</h3>
+        <ul className="text-xs text-gray-300 space-y-1 ml-4 list-disc">
+          <li>Commands execute in real-time with physics-based movement</li>
+          <li>Robot automatically stops if no command is received for 500ms (ROS2 watchdog)</li>
+          <li>Friction is applied gradually, so the robot will slow down and stop naturally</li>
+          <li>Use <code className="text-blue-400">robot.move(0.0, 0.0)</code> to stop immediately</li>
+          <li>LiDAR visualization shows 360° scan in real-time</li>
+          <li>Check the telemetry panel for velocity graphs and occupancy map</li>
+        </ul>
+      </div>
+    </>
   );
 }

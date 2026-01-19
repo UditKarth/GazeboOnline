@@ -1,9 +1,9 @@
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { useRobotStore } from '../store/robotStore';
 import { RobotCommandParser, executeCommands } from '../utils/cppParser';
 
-const defaultCode = `void main() {
+const defaultArmCode = `void main() {
     robot.moveJoint(0, 45);
     robot.moveJoint(1, 30);
     robot.moveJoint(2, -20);
@@ -12,9 +12,31 @@ const defaultCode = `void main() {
     robot.closeGripper();
 }`;
 
+const defaultRoverCode = `void main() {
+    robot.setLight("green");
+    robot.move(1.0, 0.0);  // Move forward at 1 m/s
+    // Wait a bit...
+    float dist = robot.getDistance();
+    if (dist < 2.0) {
+        robot.move(0.0, 0.5);  // Turn if obstacle detected
+    }
+    robot.move(0.0, 0.0);  // Stop
+}`;
+
 export function CodeEditor() {
   const editorRef = useRef(null);
   const robotStore = useRobotStore();
+  const { robotType } = robotStore;
+  const [code, setCode] = useState(robotType === 'arm' ? defaultArmCode : defaultRoverCode);
+
+  // Update code when robot type changes
+  useEffect(() => {
+    if (editorRef.current) {
+      const newCode = robotType === 'arm' ? defaultArmCode : defaultRoverCode;
+      editorRef.current.setValue(newCode);
+      setCode(newCode);
+    }
+  }, [robotType]);
 
   const handleEditorDidMount = (editor, monaco) => {
     editorRef.current = editor;
@@ -47,8 +69,16 @@ export function CodeEditor() {
     const parser = new RobotCommandParser();
     const commands = parser.parse(code);
 
-    if (commands.length === 0) {
-      alert('No valid robot commands found. Use robot.moveJoint(jointIndex, angle), robot.openGripper(), or robot.closeGripper()');
+    // Filter commands for current robot type
+    const validCommands = commands.filter(cmd => 
+      !cmd.robotType || cmd.robotType === robotType
+    );
+
+    if (validCommands.length === 0) {
+      const errorMsg = robotType === 'arm'
+        ? 'No valid robot commands found. Use robot.moveJoint(jointIndex, angle), robot.openGripper(), or robot.closeGripper()'
+        : 'No valid robot commands found. Use robot.move(vx, wz), robot.getDistance(), or robot.setLight(color)';
+      alert(errorMsg);
       return;
     }
 
@@ -57,7 +87,7 @@ export function CodeEditor() {
     await new Promise(resolve => setTimeout(resolve, 500));
 
     // Execute commands sequentially
-    await executeCommands(commands, robotStore);
+    await executeCommands(validCommands, robotStore);
   };
 
   const handleReset = () => {
@@ -90,7 +120,8 @@ export function CodeEditor() {
         <Editor
           height="100%"
           defaultLanguage="cpp"
-          defaultValue={defaultCode}
+          value={code}
+          onChange={(value) => setCode(value || '')}
           theme="vs-dark"
           onMount={handleEditorDidMount}
           options={{
