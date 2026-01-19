@@ -25,6 +25,7 @@ export function updateRoverPhysics(robotStore, deltaTime) {
   // Use the store directly - in Zustand, useRobotStore has getState() and all methods on it
   const store = robotStore || useRobotStore;
   const state = store.getState();
+  const storeState = state; // State object also has methods
   
   if (state.robotType !== 'rover') return;
 
@@ -36,7 +37,8 @@ export function updateRoverPhysics(robotStore, deltaTime) {
   if (lastCommandTime && (now - lastCommandTime) > WATCHDOG_TIMEOUT) {
     vx = 0;
     wz = 0;
-    store.setVelocity(0, 0);
+    const setVelocityFn = store.setVelocity || storeState.setVelocity;
+    if (setVelocityFn) setVelocityFn(0, 0);
   }
 
   // Apply friction (gradual velocity decay)
@@ -48,13 +50,15 @@ export function updateRoverPhysics(robotStore, deltaTime) {
     if (Math.abs(vx) < 0.01) vx = 0;
     if (Math.abs(wz) < 0.01) wz = 0;
 
-    store.setVelocity(vx, wz);
+    const setVelocityFn = store.setVelocity || storeState.setVelocity;
+    if (setVelocityFn) setVelocityFn(vx, wz);
   }
 
   // Update rotation based on angular velocity
   if (wz !== 0) {
     const newRotation = rotation + wz * deltaTime;
-    store.setRotation(newRotation);
+    const setRotationFn = store.setRotation || storeState.setRotation;
+    if (setRotationFn) setRotationFn(newRotation);
   }
 
   // Update position based on linear velocity and current rotation
@@ -62,7 +66,8 @@ export function updateRoverPhysics(robotStore, deltaTime) {
     const [x, y, z] = position;
     const newX = x + vx * Math.sin(rotation) * deltaTime;
     const newZ = z + vx * Math.cos(rotation) * deltaTime;
-    store.setPosition(newX, y, newZ);
+    const setPositionFn = store.setPosition || storeState.setPosition;
+    if (setPositionFn) setPositionFn(newX, y, newZ);
   }
 }
 
@@ -82,6 +87,7 @@ export function updateDistanceSensor(robotStore, scene, robotPosition, robotRota
   // Use the store directly
   const store = robotStore || useRobotStore;
   const state = store.getState();
+  const storeState = state; // State object also has methods
   
   // Only update at specified rate
   if (timeSinceUpdate < updateInterval) {
@@ -122,7 +128,11 @@ export function updateDistanceSensor(robotStore, scene, robotPosition, robotRota
     distance = Math.min(validIntersects[0].distance, DISTANCE_SENSOR_RANGE);
   }
 
-  store.setDistance(distance);
+  // Try both patterns: direct on store and through state object
+  const setDistanceFn = store.setDistance || storeState.setDistance;
+  if (setDistanceFn) {
+    setDistanceFn(distance);
+  }
   return distance;
 }
 
@@ -226,7 +236,15 @@ export function updateOccupancyMap(robotStore, lidarScan, robotPosition, mapSize
     }
   });
 
-  // Use the store directly
+  // Use the store directly - try both store object and state object for compatibility
   const store = robotStore || useRobotStore;
-  store.updateOccupancyMap(map);
+  const storeState = store.getState ? store.getState() : null;
+  
+  // Try both patterns: direct on store and through state object
+  const updateMapFn = store.updateOccupancyMap || (storeState && storeState.updateOccupancyMap);
+  if (updateMapFn && typeof updateMapFn === 'function') {
+    updateMapFn(map);
+  } else {
+    console.error('updateOccupancyMap not found on store');
+  }
 }
