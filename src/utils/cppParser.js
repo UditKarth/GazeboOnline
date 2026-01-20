@@ -35,12 +35,14 @@ export class RobotCommandParser {
       }
     }
 
-    // Extract robot.closeGripper() calls
-    const closeGripperRegex = /robot\.closeGripper\s*\(\s*\)/g;
+    // Extract robot.closeGripper() calls (with optional max_effort parameter)
+    const closeGripperRegex = /robot\.closeGripper\s*\(\s*(-?\d+(?:\.\d+)?)?\s*\)/g;
     while ((match = closeGripperRegex.exec(code)) !== null) {
+      const effort = match[1] ? parseFloat(match[1]) : undefined;
       this.commands.push({
         type: 'closeGripper',
         robotType: 'arm',
+        maxEffort: effort,
       });
     }
 
@@ -50,6 +52,22 @@ export class RobotCommandParser {
       this.commands.push({
         type: 'openGripper',
         robotType: 'arm',
+      });
+    }
+
+    // Extract robot.moveToPose(x, y, z) calls
+    const moveToPoseRegex = /robot\.moveToPose\s*\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)/g;
+    while ((match = moveToPoseRegex.exec(code)) !== null) {
+      const x = parseFloat(match[1]);
+      const y = parseFloat(match[2]);
+      const z = parseFloat(match[3]);
+      
+      this.commands.push({
+        type: 'moveToPose',
+        robotType: 'arm',
+        x,
+        y,
+        z,
       });
     }
 
@@ -137,9 +155,22 @@ export async function executeCommands(commands, robotStore) {
         console.error('animateJoint not found. Available methods on store:', Object.keys(robotStore).filter(k => typeof robotStore[k] === 'function'));
         console.error('Available methods on state:', Object.keys(storeState).filter(k => typeof storeState[k] === 'function'));
       }
+    } else if (command.type === 'moveToPose') {
+      const moveToPoseFn = robotStore.moveToPose || storeState.moveToPose;
+      if (moveToPoseFn && typeof moveToPoseFn === 'function') {
+        await moveToPoseFn(command.x, command.y, command.z, 2000);
+      }
     } else if (command.type === 'closeGripper') {
-      const setGripperFn = robotStore.setGripperState || storeState.setGripperState;
-      if (setGripperFn) setGripperFn(0);
+      // Check if maxEffort is provided
+      if (command.maxEffort !== undefined) {
+        const setGripperWithEffortFn = robotStore.setGripperWithEffort || storeState.setGripperWithEffort;
+        if (setGripperWithEffortFn) {
+          setGripperWithEffortFn(0, command.maxEffort);
+        }
+      } else {
+        const setGripperFn = robotStore.setGripperState || storeState.setGripperState;
+        if (setGripperFn) setGripperFn(0);
+      }
       await new Promise(resolve => setTimeout(resolve, 300));
     } else if (command.type === 'openGripper') {
       const setGripperFn = robotStore.setGripperState || storeState.setGripperState;

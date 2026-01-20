@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useRobotStore } from '../store/robotStore';
 import * as THREE from 'three';
 
@@ -35,35 +35,69 @@ function Link({ length, width = 0.1, color = '#3b82f6' }) {
   );
 }
 
-// Gripper component with animated fingers
-function Gripper({ isOpen }) {
+// Gripper component with animated fingers and collision detection
+function Gripper({ isOpen, maxEffort, onCollision }) {
   const leftFingerRef = useRef();
   const rightFingerRef = useRef();
+  const { setGripperEffort } = useRobotStore();
   
   useFrame(() => {
-    const openAmount = isOpen ? 0.12 : 0.04;
-    if (leftFingerRef.current) {
-      leftFingerRef.current.position.x = -openAmount;
+    const targetOpenAmount = isOpen ? 0.12 : 0.04;
+    const currentLeftX = leftFingerRef.current?.position.x || -0.04;
+    const currentRightX = rightFingerRef.current?.position.x || 0.04;
+    
+    // Calculate effort based on how much we're trying to close
+    const currentGap = Math.abs(currentRightX - currentLeftX);
+    const targetGap = isOpen ? 0.24 : 0.08;
+    const effortRatio = !isOpen ? Math.max(0, (targetGap - currentGap) / targetGap) : 0;
+    const currentEffort = effortRatio * (maxEffort || 0.8);
+    
+    // Update effort in store
+    if (!isOpen && setGripperEffort) {
+      setGripperEffort(currentEffort);
+    } else if (isOpen) {
+      setGripperEffort(0);
     }
+    
+    // Check for collision if closing and effort exceeds threshold
+    if (!isOpen && maxEffort > 0 && currentEffort >= maxEffort) {
+      // Collision detected - stop movement
+      if (onCollision) onCollision();
+      return;
+    }
+    
+    // Smoothly move fingers
+    const speed = 0.02;
+    const newLeftX = currentLeftX > -targetOpenAmount 
+      ? Math.max(currentLeftX - speed, -targetOpenAmount)
+      : Math.min(currentLeftX + speed, -targetOpenAmount);
+    const newRightX = currentRightX < targetOpenAmount
+      ? Math.min(currentRightX + speed, targetOpenAmount)
+      : Math.max(currentRightX - speed, targetOpenAmount);
+    
+    if (leftFingerRef.current) {
+      leftFingerRef.current.position.x = newLeftX;
+    }
+    
     if (rightFingerRef.current) {
-      rightFingerRef.current.position.x = openAmount;
+      rightFingerRef.current.position.x = newRightX;
     }
   });
   
   return (
-    <group>
+    <group name="gripper">
       {/* Left finger */}
-      <mesh ref={leftFingerRef} position={[-0.04, 0, 0]}>
+      <mesh ref={leftFingerRef} position={[-0.04, 0, 0]} name="finger-left">
         <boxGeometry args={[0.06, 0.15, 0.04]} />
         <meshStandardMaterial color="#ef4444" metalness={0.7} roughness={0.3} />
       </mesh>
       {/* Right finger */}
-      <mesh ref={rightFingerRef} position={[0.04, 0, 0]}>
+      <mesh ref={rightFingerRef} position={[0.04, 0, 0]} name="finger-right">
         <boxGeometry args={[0.06, 0.15, 0.04]} />
         <meshStandardMaterial color="#ef4444" metalness={0.7} roughness={0.3} />
       </mesh>
       {/* Base */}
-      <mesh position={[0, -0.05, 0]}>
+      <mesh position={[0, -0.05, 0]} name="gripper-base">
         <boxGeometry args={[0.2, 0.08, 0.08]} />
         <meshStandardMaterial color="#dc2626" metalness={0.7} roughness={0.3} />
       </mesh>
@@ -71,9 +105,38 @@ function Gripper({ isOpen }) {
   );
 }
 
+// Path visualization component
+function PathVisualization({ pathPoints }) {
+  if (!pathPoints || pathPoints.length < 2) return null;
+  
+  const points = pathPoints.map(point => [point.x, point.y, point.z]).flat();
+  const geometry = new THREE.BufferGeometry().setFromPoints(
+    pathPoints.map(p => new THREE.Vector3(p.x, p.y, p.z))
+  );
+  
+  return (
+    <line name="trajectory-path" geometry={geometry}>
+      <lineBasicMaterial color="#00ff00" opacity={0.4} transparent linewidth={2} />
+    </line>
+  );
+}
+
 // Main Robot Arm Component
 export function RobotModel() {
-  const { jointAngles, gripperState, robotType } = useRobotStore();
+  const { 
+    jointAngles, 
+    gripperState, 
+    gripperMaxEffort,
+    gripperEffort,
+    trajectoryPath,
+    robotType,
+    setGripperEffort 
+  } = useRobotStore();
+  
+  const handleGripperCollision = () => {
+    // Stop gripper movement on collision
+    setGripperEffort(gripperMaxEffort);
+  };
 
   if (robotType !== 'arm') return null;
 
@@ -112,13 +175,20 @@ export function RobotModel() {
                 {/* Gripper Rotation Joint */}
                 <Joint rotation={jointAngles[4]} position={[0, 0.15, 0]}>
                   {/* Gripper */}
-                  <Gripper isOpen={gripperState === 1} />
+                  <Gripper 
+                    isOpen={gripperState === 1} 
+                    maxEffort={gripperMaxEffort}
+                    onCollision={handleGripperCollision}
+                  />
                 </Joint>
               </Joint>
             </Joint>
           </Joint>
         </Joint>
       </group>
+
+      {/* Path Visualization */}
+      <PathVisualization pathPoints={trajectoryPath} />
 
       {/* Axes Helper for debugging */}
       <axesHelper args={[1]} />

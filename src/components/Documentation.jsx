@@ -29,38 +29,62 @@ function ArmDocumentation() {
         </p>
       </div>
 
-        {/* moveJoint */}
-        <div>
-          <h3 className="text-md font-semibold text-white mb-2">
-            <code className="text-blue-400">robot.moveJoint(jointIndex, angle)</code>
-          </h3>
-          <p className="text-sm text-gray-300 mb-2 leading-relaxed">
-            Rotates a specific joint to the target angle. The movement is animated over 1 second.
-          </p>
-          <div className="bg-gray-800 rounded p-3 mb-2">
-            <p className="text-xs text-gray-400 mb-1">Parameters:</p>
-            <ul className="text-xs text-gray-300 space-y-1 ml-4 list-disc">
-              <li><code className="text-blue-400">jointIndex</code> (int): The joint to move (0-4)</li>
-              <li><code className="text-blue-400">angle</code> (float): Target angle in degrees (can be negative)</li>
-            </ul>
-          </div>
-          <div className="bg-gray-800 rounded p-3">
-            <p className="text-xs text-gray-400 mb-1">Joint Index Reference:</p>
-            <ul className="text-xs text-gray-300 space-y-1 ml-4 list-disc">
-              <li><code className="text-blue-400">0</code> - Base (rotates around Y-axis)</li>
-              <li><code className="text-blue-400">1</code> - Shoulder (rotates around Z-axis)</li>
-              <li><code className="text-blue-400">2</code> - Elbow (rotates around Z-axis)</li>
-              <li><code className="text-blue-400">3</code> - Wrist (rotates around Z-axis)</li>
-              <li><code className="text-blue-400">4</code> - Gripper Rotation (rotates around Z-axis)</li>
-            </ul>
-          </div>
-          <div className="mt-2 bg-gray-800 rounded p-3">
-            <p className="text-xs text-gray-400 mb-1">Example:</p>
-            <pre className="text-xs text-gray-300 overflow-x-auto">
-              <code>{`robot.moveJoint(0, 45);   // Rotate base 45°\nrobot.moveJoint(1, -30); // Rotate shoulder -30°`}</code>
-            </pre>
-          </div>
+      {/* moveToPose */}
+      <div>
+        <h3 className="text-md font-semibold text-white mb-2">
+          <code className="text-blue-400">robot.moveToPose(x, y, z)</code>
+        </h3>
+        <p className="text-sm text-gray-300 mb-2 leading-relaxed">
+          Moves the end-effector to a target position using inverse kinematics. A trajectory path is visualized before movement begins.
+        </p>
+        <div className="bg-gray-800 rounded p-3 mb-2">
+          <p className="text-xs text-gray-400 mb-1">Parameters:</p>
+          <ul className="text-xs text-gray-300 space-y-1 ml-4 list-disc">
+            <li><code className="text-blue-400">x</code> (float): Target X position in meters</li>
+            <li><code className="text-blue-400">y</code> (float): Target Y position in meters</li>
+            <li><code className="text-blue-400">z</code> (float): Target Z position in meters</li>
+          </ul>
         </div>
+        <div className="mt-2 bg-gray-800 rounded p-3">
+          <p className="text-xs text-gray-400 mb-1">Example:</p>
+          <pre className="text-xs text-gray-300 overflow-x-auto">
+            <code>{`robot.moveToPose(0.5, 1.0, 0.3);  // Move to position (0.5, 1.0, 0.3)`}</code>
+          </pre>
+        </div>
+      </div>
+
+      {/* moveJoint */}
+      <div>
+        <h3 className="text-md font-semibold text-white mb-2">
+          <code className="text-blue-400">robot.moveJoint(jointIndex, angle)</code>
+        </h3>
+        <p className="text-sm text-gray-300 mb-2 leading-relaxed">
+          Rotates a specific joint to the target angle. The movement is animated over 1 second.
+        </p>
+        <div className="bg-gray-800 rounded p-3 mb-2">
+          <p className="text-xs text-gray-400 mb-1">Parameters:</p>
+          <ul className="text-xs text-gray-300 space-y-1 ml-4 list-disc">
+            <li><code className="text-blue-400">jointIndex</code> (int): The joint to move (0-4)</li>
+            <li><code className="text-blue-400">angle</code> (float): Target angle in degrees (can be negative)</li>
+          </ul>
+        </div>
+        <div className="bg-gray-800 rounded p-3">
+          <p className="text-xs text-gray-400 mb-1">Joint Index Reference:</p>
+          <ul className="text-xs text-gray-300 space-y-1 ml-4 list-disc">
+            <li><code className="text-blue-400">0</code> - Base (rotates around Y-axis)</li>
+            <li><code className="text-blue-400">1</code> - Shoulder (rotates around Z-axis)</li>
+            <li><code className="text-blue-400">2</code> - Elbow (rotates around Z-axis)</li>
+            <li><code className="text-blue-400">3</code> - Wrist (rotates around Z-axis)</li>
+            <li><code className="text-blue-400">4</code> - Gripper Rotation (rotates around Z-axis)</li>
+          </ul>
+        </div>
+        <div className="mt-2 bg-gray-800 rounded p-3">
+          <p className="text-xs text-gray-400 mb-1">Example:</p>
+          <pre className="text-xs text-gray-300 overflow-x-auto">
+            <code>{`robot.moveJoint(0, 45);   // Rotate base 45°\nrobot.moveJoint(1, -30); // Rotate shoulder -30°`}</code>
+          </pre>
+        </div>
+      </div>
 
         {/* openGripper */}
         <div>
@@ -78,31 +102,37 @@ function ArmDocumentation() {
           </div>
         </div>
 
-        {/* closeGripper */}
-        <div>
-          <h3 className="text-md font-semibold text-white mb-2">
-            <code className="text-blue-400">robot.closeGripper()</code>
-          </h3>
-          <p className="text-sm text-gray-300 mb-2 leading-relaxed">
-            Closes the gripper by bringing the two fingers together. This command completes immediately.
-          </p>
-          <div className="bg-gray-800 rounded p-3">
-            <p className="text-xs text-gray-400 mb-1">Example:</p>
-            <pre className="text-xs text-gray-300 overflow-x-auto">
-              <code>{`robot.closeGripper();`}</code>
-            </pre>
-          </div>
+      {/* closeGripper */}
+      <div>
+        <h3 className="text-md font-semibold text-white mb-2">
+          <code className="text-blue-400">robot.closeGripper(max_effort)</code>
+        </h3>
+        <p className="text-sm text-gray-300 mb-2 leading-relaxed">
+          Closes the gripper with optional maximum effort. If effort exceeds the threshold (default 0.8), the gripper stops on collision detection.
+        </p>
+        <div className="bg-gray-800 rounded p-3 mb-2">
+          <p className="text-xs text-gray-400 mb-1">Parameters:</p>
+          <ul className="text-xs text-gray-300 space-y-1 ml-4 list-disc">
+            <li><code className="text-blue-400">max_effort</code> (float, optional): Maximum effort threshold (0.0 to 1.0). Default: 0.8</li>
+          </ul>
         </div>
+        <div className="bg-gray-800 rounded p-3">
+          <p className="text-xs text-gray-400 mb-1">Example:</p>
+          <pre className="text-xs text-gray-300 overflow-x-auto">
+            <code>{`robot.closeGripper();        // Close with default effort\nrobot.closeGripper(0.9);    // Close with higher effort threshold`}</code>
+          </pre>
+        </div>
+      </div>
 
-        {/* Complete Example */}
-        <div>
-          <h3 className="text-md font-semibold text-white mb-2">Complete Example</h3>
-          <div className="bg-gray-800 rounded p-3">
-            <pre className="text-xs text-gray-300 overflow-x-auto">
-              <code>{`void main() {\n    robot.moveJoint(0, 45);\n    robot.moveJoint(1, 30);\n    robot.openGripper();\n    robot.moveJoint(2, -20);\n    robot.closeGripper();\n}`}</code>
-            </pre>
-          </div>
+      {/* Complete Example */}
+      <div>
+        <h3 className="text-md font-semibold text-white mb-2">Complete Example</h3>
+        <div className="bg-gray-800 rounded p-3">
+          <pre className="text-xs text-gray-300 overflow-x-auto">
+            <code>{`void main() {\n    // Move to position using IK\n    robot.moveToPose(0.5, 1.0, 0.3);\n    robot.openGripper();\n    // Move individual joints\n    robot.moveJoint(1, 30);\n    robot.closeGripper(0.8);  // Close with collision detection\n}`}</code>
+          </pre>
         </div>
+      </div>
 
       {/* Notes */}
       <div className="border-t border-gray-700 pt-4">

@@ -4,12 +4,12 @@ import { useRobotStore } from '../store/robotStore';
 import { RobotCommandParser, executeCommands } from '../utils/cppParser';
 
 const defaultArmCode = `void main() {
-    robot.moveJoint(0, 45);
-    robot.moveJoint(1, 30);
-    robot.moveJoint(2, -20);
+    // Move to position using inverse kinematics
+    robot.moveToPose(0.5, 1.0, 0.3);
     robot.openGripper();
-    robot.moveJoint(0, 90);
-    robot.closeGripper();
+    // Fine-tune with individual joint control
+    robot.moveJoint(1, 30);
+    robot.closeGripper(0.8);  // Close with collision detection
 }`;
 
 const defaultRoverCode = `void main() {

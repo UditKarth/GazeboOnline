@@ -4,6 +4,7 @@ import { useRobotStore } from '../store/robotStore';
 import { RobotModel } from './RobotModel';
 import { RoverModel } from './RoverModel';
 import { TelemetryPanel } from './TelemetryPanel';
+import { JointStatePanel } from './JointStatePanel';
 
 export function SimulationView() {
   const { robotType } = useRobotStore();
@@ -41,6 +42,9 @@ export function SimulationView() {
 
       {/* Telemetry Panel for Rover */}
       {robotType === 'rover' && <TelemetryPanel />}
+
+      {/* Joint State Panel for Arm */}
+      {robotType === 'arm' && <JointStatePanel />}
 
       {/* Info Panel */}
       <div className="p-4 bg-gray-800 border-t border-gray-700">
